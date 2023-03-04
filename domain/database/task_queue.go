@@ -8,6 +8,9 @@ var (
 	ShortestJobFirst Algorithm = "SJF"
 )
 
-type WorkerDispatcher struct {
-	Algorithm Algorithm
+type TaskQueue struct {
+	TaskID     uint
+	Preemption bool
+	Algorithm  Algorithm
+	Jobs       []Job
 }

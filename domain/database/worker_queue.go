@@ -1,4 +1,6 @@
 package domain
 
-type workerQueue struct {
+type WorkerQueue struct {
+	WorkerID uint
+	Jobs     []Job
 }

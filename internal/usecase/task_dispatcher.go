@@ -1,4 +1,4 @@
-package domain
+package usecase
 
 type DispatchMethod string
 
@@ -7,10 +7,10 @@ var (
 	Glob  DispatchMethod = "glob"
 )
 
-type JobDispatcher struct {
-	method DispatchMethod
+type TaskDispatcher struct {
+	Method DispatchMethod
 }
 
-func (d *JobDispatcher) Dispatch() {
+func (d *TaskDispatcher) Dispatch() {
 
 }

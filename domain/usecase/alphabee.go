@@ -7,16 +7,18 @@ import (
 type AlphabeeUsecase interface {
 	Push(dbdomain.Job) error
 	Pop(workerID uint) (dbdomain.Job, error)
-	AddTask(dbdomain.Task) error
+	AddTask(taskName string, algorithm dbdomain.Algorithm) error
 	RemoveTask(taskName string) error
-	AddWorker(dbdomain.Worker) error
+	AddWorker(workerName string) error
 	RemoveWorker(workerName string) error
 }
 
-type TaskDispatcher interface {
-	AssignJobToTask()
+type DispatcherFactory interface {
+	AddDispatcher() error
+	RemoveDispatcher() error
 }
 
-type WorkerDispatcher interface {
-	AssignJobToWorker()
+type BrokerFactory interface {
+	AddBroker() error
+	RemoveBroker() error
 }

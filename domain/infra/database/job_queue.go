@@ -1,13 +1,11 @@
 package domain
 
-type DispatchMethod string
-
-var (
-	Regex DispatchMethod = "regex"
-	Glob  DispatchMethod = "glob"
-)
+type Job struct {
+	ID       uint
+	TaskName string
+	Priority uint8
+}
 
 type JobQueue struct {
-	Method DispatchMethod
-	Jobs   chan Job
+	Jobs chan Job
 }

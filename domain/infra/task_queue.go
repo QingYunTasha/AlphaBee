@@ -8,9 +8,14 @@ var (
 	ShortestJobFirst Algorithm = "SHORTEST_JOB_FIRST"
 )
 
-type TaskQueue struct {
-	ID        uint
+/* type TaskQueue struct {
 	TaskName  string
 	Algorithm Algorithm
 	Jobs      []Job
+}
+*/
+
+type TaskQueue interface {
+	Push(job Job)
+	Pop() (job Job)
 }

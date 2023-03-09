@@ -1,0 +1,9 @@
+
+job:
+  queuesize: 1024
+
+task:
+  queuesize: 256
+
+worker:
+  queuesize: 8

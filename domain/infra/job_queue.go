@@ -5,7 +5,3 @@ type Job struct {
 	TaskName string
 	Priority uint8
 }
-
-type JobQueue struct {
-	Jobs chan Job
-}

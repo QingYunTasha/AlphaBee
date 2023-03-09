@@ -10,8 +10,6 @@ var (
 )
 
 type WorkerQueue struct {
-	ID         uint
 	WorkerName string
-	//WorkerStatus WorkerStatus
-	Jobs []Job
+	Jobs       chan Job
 }

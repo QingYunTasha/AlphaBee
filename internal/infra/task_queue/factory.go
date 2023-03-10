@@ -40,3 +40,7 @@ func (q *TaskQueue) Pop() (job infradomain.Job) {
 
 	return q.Jobs.Pop()
 }
+
+func (q *TaskQueue) Len() int {
+	return q.Jobs.Len()
+}

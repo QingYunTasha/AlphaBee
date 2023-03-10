@@ -73,7 +73,20 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, n int)
 	}
 
 	// TODO: Need to initialize to fill the worker queue
-	a.repo.WorkerQueues[workerName] = infra.NewWorkerQueue(n)
+	wq := infra.NewWorkerQueue(n)
+	go func() {
+	LOOP:
+		for task := range a.repo.WorkerTasksMapping[workerName] {
+			for a.repo.TaskQueues[task].Len() > 0 {
+				wq <- a.repo.TaskQueues[task].Pop()
+
+				if len(wq) == cap(wq) {
+					break LOOP
+				}
+			}
+		}
+	}()
+	a.repo.WorkerQueues[workerName] = wq
 	return nil
 }
 

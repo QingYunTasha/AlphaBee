@@ -21,4 +21,5 @@ type AsyncTaskQueue interface {
 	sync.Locker
 	Push(job Job)
 	Pop() (job Job)
+	Len() int
 }

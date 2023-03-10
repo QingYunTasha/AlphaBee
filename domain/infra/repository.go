@@ -1,8 +1,9 @@
 package domain
 
 type Repository struct {
-	JobQueue     chan Job
-	TaskQueues   map[string]AsyncTaskQueue
-	WorkerQueues map[string]WorkerQueue
-	Brokers      map[string]Broker
+	JobQueue           chan Job
+	TaskQueues         map[string]AsyncTaskQueue
+	Brokers            map[string]Broker
+	TaskWorkersMapping map[string]map[string]WorkerQueue
+	WorkerQueues       map[string]WorkerQueue
 }

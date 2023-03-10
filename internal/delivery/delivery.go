@@ -2,6 +2,7 @@ package delivery
 
 import (
 	infradomain "AlphaBee/domain/infra"
+	usecasedomain "AlphaBee/domain/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,10 +10,10 @@ import (
 )
 
 type AlphaBeeHandler struct {
-	AlphaBeeUsecase infradomain.AlphaBeeUsecase
+	AlphaBeeUsecase usecasedomain.AlphaBeeUsecase
 }
 
-func NewAlphaBeeHandler(server *gin.Engine, usecase infradomain.AlphaBeeUsecase) {
+func NewAlphaBeeHandler(server *gin.Engine, usecase usecasedomain.AlphaBeeUsecase) {
 	handler := &AlphaBeeHandler{
 		AlphaBeeUsecase: usecase,
 	}
@@ -80,7 +81,8 @@ func (h AlphaBeeHandler) RemoveTask(c *gin.Context) {
 
 func (h AlphaBeeHandler) AddWorker(c *gin.Context) {
 	var body struct {
-		WorkerName string `json:"worker_name" binding:"required"`
+		WorkerName string   `json:"worker_name" binding:"required"`
+		Tasks      []string `json:"tasks" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -88,7 +90,7 @@ func (h AlphaBeeHandler) AddWorker(c *gin.Context) {
 		return
 	}
 
-	if err := h.AlphaBeeUsecase.AddWorker(body.WorkerName, viper.GetInt("worker.queuesize")); err != nil {
+	if err := h.AlphaBeeUsecase.AddWorker(body.WorkerName, body.Tasks, viper.GetInt("worker.queuesize")); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

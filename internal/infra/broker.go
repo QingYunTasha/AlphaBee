@@ -16,6 +16,5 @@ func NewBroker(taskQueue infradomain.AsyncTaskQueue) infradomain.Broker {
 }
 
 func (b Broker) PushJob(job infradomain.Job, workerName string) {
-	j := b.TaskQueue.Pop()
-	b.Repo.WorkerQueues[workerName] <- j
+	b.Repo.WorkerQueues[workerName] <- b.TaskQueue.Pop()
 }

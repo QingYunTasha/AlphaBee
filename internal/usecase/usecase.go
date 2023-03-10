@@ -40,8 +40,6 @@ func (a AlphaBeeUsecase) AddTask(taskName string, algorithm infradomain.Algorith
 
 	tq := taskqueue.NewTaskQueue(algorithm, viper.GetInt("task_queue_size"))
 	a.repo.TaskQueues[taskName] = tq
-	// This method cannot fit when create add worker before task
-	a.repo.TaskWorkersMapping[taskName] = make(map[string]infradomain.WorkerQueue)
 	a.repo.Brokers[taskName] = infra.NewBroker(tq)
 
 	return nil
@@ -52,22 +50,29 @@ func (a AlphaBeeUsecase) RemoveTask(taskName string) error {
 		return fmt.Errorf("task %s not found", taskName)
 	}
 	delete(a.repo.TaskQueues, taskName)
-	delete(a.repo.TaskWorkersMapping, taskName)
+	delete(a.repo.Brokers, taskName)
 	return nil
 }
 
-func (a AlphaBeeUsecase) AddWorker(workerName string, tasks []string, n int) error {
+func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, n int) error {
 	if _, ok := a.repo.WorkerQueues[workerName]; ok {
 		return fmt.Errorf("worker %s already exists", workerName)
 	}
 
-	wq := infra.NewWorkerQueue(n)
-	for _, task := range tasks {
-		a.repo.TaskWorkersMapping[task][workerName] = wq
+	// add m2m mapping
+	if _, ok := a.repo.WorkerTasksMapping[workerName]; !ok {
+		a.repo.WorkerTasksMapping[workerName] = make(map[string]bool)
+	}
+
+	for _, taskName := range taskNames {
+		if _, ok := a.repo.TaskWorkersMapping[taskName]; !ok {
+			a.repo.TaskWorkersMapping[taskName] = make(map[string]bool)
+		}
+		a.repo.TaskWorkersMapping[taskName][workerName] = true
+		a.repo.WorkerTasksMapping[workerName][taskName] = true
 	}
 
 	// TODO: Need to initialize to fill the worker queue
-
 	a.repo.WorkerQueues[workerName] = infra.NewWorkerQueue(n)
 	return nil
 }

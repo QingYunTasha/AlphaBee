@@ -1,7 +1,3 @@
 package domain
 
-type Job struct {
-	ID       uint
-	TaskName string
-	Priority uint8
-}
+type JobQueue chan Job

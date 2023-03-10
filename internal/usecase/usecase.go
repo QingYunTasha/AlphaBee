@@ -3,6 +3,7 @@ package usecase
 import (
 	infradomain "AlphaBee/domain/infra"
 	"AlphaBee/internal/infra"
+	taskqueue "AlphaBee/internal/infra/task_queue"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -29,7 +30,7 @@ func (a AlphaBeeUsecase) PopJob(workerName string) (infradomain.Job, error) {
 		return infradomain.Job{}, fmt.Errorf("worker %s not found", workerName)
 	}
 
-	return <-wq.Jobs, nil
+	return <-wq, nil
 }
 
 func (a AlphaBeeUsecase) AddTask(taskName string, algorithm infradomain.Algorithm, n int) error {
@@ -37,7 +38,7 @@ func (a AlphaBeeUsecase) AddTask(taskName string, algorithm infradomain.Algorith
 		return fmt.Errorf("task %s already exists", taskName)
 	}
 
-	tq := infra.NewTaskQueue(algorithm, viper.GetInt("task_queue_size"))
+	tq := taskqueue.NewTaskQueue(algorithm, viper.GetInt("task_queue_size"))
 	a.repo.TaskQueues[taskName] = tq
 	a.repo.Brokers[taskName] = infra.NewBroker(tq)
 
@@ -55,10 +56,7 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, n int) error {
 		return fmt.Errorf("worker %s already exists", workerName)
 	}
 
-	a.repo.WorkerQueues[workerName] = infradomain.WorkerQueue{
-		WorkerName: workerName,
-		Jobs:       make(chan infradomain.Job, n),
-	}
+	a.repo.WorkerQueues[workerName] = infra.NewWorkerQueue(n)
 	return nil
 }
 func (a AlphaBeeUsecase) RemoveWorker(workerName string) error {

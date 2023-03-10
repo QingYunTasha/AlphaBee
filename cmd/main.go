@@ -1,6 +1,7 @@
 package main
 
 import (
+	"AlphaBee/config"
 	infradomain "AlphaBee/domain/infra"
 	delivery "AlphaBee/internal/delivery"
 	infra "AlphaBee/internal/infra"
@@ -11,14 +12,16 @@ import (
 )
 
 func main() {
+	config.Init()
+
 	repo := infradomain.Repository{
 		JobQueue:     make(chan infradomain.Job, viper.GetInt("job.queuesize")),
-		TaskQueues:   make(map[string]infradomain.TaskQueue),
+		TaskQueues:   make(map[string]infradomain.AsyncTaskQueue),
 		Brokers:      make(map[string]infradomain.Broker),
 		WorkerQueues: make(map[string]infradomain.WorkerQueue),
 	}
 
-	dispatcher := infra.NewDispatcher(repo)
+	dispatcher := infra.NewDispatcher(repo.JobQueue, repo.TaskQueues)
 	dispatcher.Run()
 
 	alphaBeeUsecase := usecase.NewAlphaBeeUsecase(repo)

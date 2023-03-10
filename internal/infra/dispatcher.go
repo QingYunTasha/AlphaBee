@@ -5,12 +5,14 @@ import (
 )
 
 type Dispatcher struct {
-	repo infradomain.Repository
+	JobQueue   infradomain.JobQueue
+	TaskQueues map[string]infradomain.AsyncTaskQueue
 }
 
-func NewDispatcher(repo infradomain.Repository) infradomain.Dispatcher {
+func NewDispatcher(jobQueue infradomain.JobQueue, taskQueues map[string]infradomain.AsyncTaskQueue) infradomain.Dispatcher {
 	return &Dispatcher{
-		repo: repo,
+		JobQueue:   jobQueue,
+		TaskQueues: taskQueues,
 	}
 }
 
@@ -18,11 +20,11 @@ func (d Dispatcher) Run() {
 	go func() {
 		var job infradomain.Job
 		for {
-			job = <-d.repo.JobQueue
+			job = <-d.JobQueue
 
-			for key, _ := range d.repo.TaskQueues {
+			for key := range d.TaskQueues {
 				if job.TaskName == key {
-					d.repo.TaskQueues[key].Push(job)
+					d.TaskQueues[key].Push(job)
 					break
 				}
 			}

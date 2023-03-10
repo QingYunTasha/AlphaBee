@@ -30,7 +30,19 @@ func (a AlphaBeeUsecase) PopJob(workerName string) (infradomain.Job, error) {
 		return infradomain.Job{}, fmt.Errorf("worker %s not found", workerName)
 	}
 
-	return <-wq, nil
+	job := <-wq
+
+	go func() {
+	LOOP:
+		for task := range a.repo.WorkerTasksMapping[workerName] {
+			if a.repo.TaskQueues[task].Len() > 0 {
+				wq <- a.repo.TaskQueues[task].Pop()
+				break LOOP
+			}
+		}
+	}()
+
+	return job, nil
 }
 
 func (a AlphaBeeUsecase) AddTask(taskName string, algorithm infradomain.Algorithm, n int) error {

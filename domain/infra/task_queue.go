@@ -11,6 +11,8 @@ var (
 	ShortestJobFirst   Algorithm = "SHORTEST_JOB_FIRST"
 )
 
+type TaskName string
+
 type TaskQueue interface {
 	Push(job Job)
 	Pop() (job Job)

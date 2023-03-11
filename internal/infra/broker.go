@@ -5,16 +5,17 @@ import (
 )
 
 type Broker struct {
-	TaskQueue infradomain.AsyncTaskQueue
-	Repo      infradomain.Repository
+	TaskQueue    infradomain.AsyncTaskQueue
+	WorkerQueues map[infradomain.WorkerName]infradomain.WorkerQueue
 }
 
-func NewBroker(taskQueue infradomain.AsyncTaskQueue) infradomain.Broker {
+func NewBroker(taskQueue infradomain.AsyncTaskQueue, workerQueues map[infradomain.WorkerName]infradomain.WorkerQueue) infradomain.Broker {
 	return &Broker{
-		TaskQueue: taskQueue,
+		TaskQueue:    taskQueue,
+		WorkerQueues: workerQueues,
 	}
 }
 
 func (b Broker) PushJob(job infradomain.Job, workerName string) {
-	b.Repo.WorkerQueues[workerName] <- b.TaskQueue.Pop()
+	b.WorkerQueues[infradomain.WorkerName(workerName)] <- b.TaskQueue.Pop()
 }

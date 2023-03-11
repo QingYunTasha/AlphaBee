@@ -1,4 +1,4 @@
-package delivery
+package restful
 
 import (
 	infradomain "AlphaBee/domain/infra"

@@ -6,10 +6,10 @@ import (
 
 type Dispatcher struct {
 	JobQueue   infradomain.JobQueue
-	TaskQueues map[string]infradomain.AsyncTaskQueue
+	TaskQueues map[infradomain.TaskName]infradomain.AsyncTaskQueue
 }
 
-func NewDispatcher(jobQueue infradomain.JobQueue, taskQueues map[string]infradomain.AsyncTaskQueue) infradomain.Dispatcher {
+func NewDispatcher(jobQueue infradomain.JobQueue, taskQueues map[infradomain.TaskName]infradomain.AsyncTaskQueue) infradomain.Dispatcher {
 	return &Dispatcher{
 		JobQueue:   jobQueue,
 		TaskQueues: taskQueues,
@@ -23,7 +23,7 @@ func (d Dispatcher) Run() {
 			job = <-d.JobQueue
 
 			for key := range d.TaskQueues {
-				if job.TaskName == key {
+				if job.TaskName == string(key) {
 					d.TaskQueues[key].Push(job)
 					break
 				}

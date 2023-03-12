@@ -2,18 +2,17 @@ package usecase
 
 import (
 	infradomain "AlphaBee/domain/infra"
+	usecasedomain "AlphaBee/domain/usecase"
 	"AlphaBee/internal/infra"
 	taskqueue "AlphaBee/internal/infra/task_queue"
 	"fmt"
-
-	"github.com/spf13/viper"
 )
 
 type AlphaBeeUsecase struct {
 	repo infradomain.Repository
 }
 
-func NewAlphaBeeUsecase(repo infradomain.Repository) *AlphaBeeUsecase {
+func NewAlphaBeeUsecase(repo infradomain.Repository) usecasedomain.AlphaBeeUsecase {
 	return &AlphaBeeUsecase{
 		repo: repo,
 	}
@@ -24,7 +23,7 @@ func (a AlphaBeeUsecase) PushJob(job infradomain.Job) error {
 	return nil
 }
 
-func (a AlphaBeeUsecase) PopJob(workerName string) (infradomain.Job, error) {
+func (a AlphaBeeUsecase) PullJob(workerName string) (infradomain.Job, error) {
 	wq, ok := a.repo.WorkerQueues[infradomain.WorkerName(workerName)]
 	if !ok {
 		return infradomain.Job{}, fmt.Errorf("worker %s not found", workerName)
@@ -45,12 +44,16 @@ func (a AlphaBeeUsecase) PopJob(workerName string) (infradomain.Job, error) {
 	return job, nil
 }
 
-func (a AlphaBeeUsecase) AddTask(taskName string, algorithm infradomain.Algorithm, n int) error {
+func (a AlphaBeeUsecase) AddTask(taskName string, algorithm string, n int) error {
 	if _, ok := a.repo.TaskQueues[infradomain.TaskName(taskName)]; ok {
 		return fmt.Errorf("task %s already exists", taskName)
 	}
 
-	tq := taskqueue.NewTaskQueue(algorithm, viper.GetInt("task_queue_size"))
+	if isValid := infradomain.IsValidAlgorithm(algorithm); !isValid {
+		return fmt.Errorf("algorithm %s not supported", algorithm)
+	}
+
+	tq := taskqueue.NewTaskQueue(infradomain.Algorithm(algorithm), n)
 	a.repo.TaskQueues[infradomain.TaskName(taskName)] = tq
 	a.repo.Brokers[infradomain.TaskName(taskName)] = infra.NewBroker(tq, a.repo.WorkerQueues)
 
@@ -84,7 +87,6 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, n int)
 		a.repo.WorkerTasksMapping[infradomain.WorkerName(workerName)][infradomain.TaskName(taskName)] = true
 	}
 
-	// TODO: Need to initialize to fill the worker queue
 	wq := infra.NewWorkerQueue(n)
 	go func() {
 	LOOP:

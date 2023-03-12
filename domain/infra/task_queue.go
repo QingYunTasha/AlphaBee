@@ -11,6 +11,15 @@ var (
 	ShortestJobFirst   Algorithm = "SHORTEST_JOB_FIRST"
 )
 
+func IsValidAlgorithm(input string) bool {
+	switch Algorithm(input) {
+	case RoundRobin, PriorityLargeFirst, PrioritySmallFirst, ShortestJobFirst:
+		return true
+	default:
+		return false
+	}
+}
+
 type TaskName string
 
 type TaskQueue interface {

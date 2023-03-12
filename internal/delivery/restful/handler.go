@@ -42,7 +42,7 @@ func (h AlphaBeeHandler) PushJob(c *gin.Context) {
 }
 
 func (h AlphaBeeHandler) PopJob(c *gin.Context) {
-	job, err := h.AlphaBeeUsecase.PopJob(c.Param("workername"))
+	job, err := h.AlphaBeeUsecase.PullJob(c.Param("workername"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -53,8 +53,8 @@ func (h AlphaBeeHandler) PopJob(c *gin.Context) {
 
 func (h AlphaBeeHandler) AddTask(c *gin.Context) {
 	var body struct {
-		TaskName  string                `json:"task_name" binding:"required"`
-		Algorithm infradomain.Algorithm `json:"algorithm" binding:"required"`
+		TaskName  string `json:"task_name" binding:"required"`
+		Algorithm string `json:"algorithm" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {

@@ -44,7 +44,7 @@ func (a AlphaBeeUsecase) PullJob(workerName string) (infradomain.Job, error) {
 	return job, nil
 }
 
-func (a AlphaBeeUsecase) AddTask(taskName string, algorithm string, n int) error {
+func (a AlphaBeeUsecase) AddTask(taskName string, algorithm string, taskQueueLength int) error {
 	if _, ok := a.repo.TaskQueues[infradomain.TaskName(taskName)]; ok {
 		return fmt.Errorf("task %s already exists", taskName)
 	}
@@ -53,7 +53,7 @@ func (a AlphaBeeUsecase) AddTask(taskName string, algorithm string, n int) error
 		return fmt.Errorf("algorithm %s not supported", algorithm)
 	}
 
-	tq := taskqueue.NewTaskQueue(infradomain.Algorithm(algorithm), n)
+	tq := taskqueue.NewTaskQueue(infradomain.Algorithm(algorithm), taskQueueLength)
 	a.repo.TaskQueues[infradomain.TaskName(taskName)] = tq
 	a.repo.Brokers[infradomain.TaskName(taskName)] = infra.NewBroker(tq, a.repo.WorkerQueues)
 
@@ -69,7 +69,7 @@ func (a AlphaBeeUsecase) RemoveTask(taskName string) error {
 	return nil
 }
 
-func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, n int) error {
+func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, workerQueueLength int) error {
 	if _, ok := a.repo.WorkerQueues[infradomain.WorkerName(workerName)]; ok {
 		return fmt.Errorf("worker %s already exists", workerName)
 	}
@@ -87,7 +87,7 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, n int)
 		a.repo.WorkerTasksMapping[infradomain.WorkerName(workerName)][infradomain.TaskName(taskName)] = true
 	}
 
-	wq := infra.NewWorkerQueue(n)
+	wq := infra.NewWorkerQueue(workerQueueLength)
 	go func() {
 	LOOP:
 		for task := range a.repo.WorkerTasksMapping[infradomain.WorkerName(workerName)] {

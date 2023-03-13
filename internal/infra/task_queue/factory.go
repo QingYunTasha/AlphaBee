@@ -10,7 +10,7 @@ type TaskQueue struct {
 	Jobs infradomain.TaskQueue
 }
 
-func NewTaskQueue(algorithm infradomain.Algorithm, n int) infradomain.AsyncTaskQueue {
+func NewTaskQueue(algorithm infradomain.Algorithm, length int) infradomain.AsyncTaskQueue {
 	var jobs infradomain.TaskQueue
 	switch algorithm {
 	case infradomain.PrioritySmallFirst:

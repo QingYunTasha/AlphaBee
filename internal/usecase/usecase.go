@@ -9,10 +9,10 @@ import (
 )
 
 type AlphaBeeUsecase struct {
-	repo infradomain.Repository
+	repo *infradomain.Repository
 }
 
-func NewAlphaBeeUsecase(repo infradomain.Repository) usecasedomain.AlphaBeeUsecase {
+func NewAlphaBeeUsecase(repo *infradomain.Repository) usecasedomain.AlphaBeeUsecase {
 	return &AlphaBeeUsecase{
 		repo: repo,
 	}
@@ -88,7 +88,7 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, worker
 	}
 
 	wq := infra.NewWorkerQueue(workerQueueLength)
-	go func() {
+	go func(a AlphaBeeUsecase) {
 	LOOP:
 		for task := range a.repo.WorkerTasksMapping[infradomain.WorkerName(workerName)] {
 			for a.repo.TaskQueues[task].Len() > 0 {
@@ -99,7 +99,7 @@ func (a AlphaBeeUsecase) AddWorker(workerName string, taskNames []string, worker
 				}
 			}
 		}
-	}()
+	}(a)
 	a.repo.WorkerQueues[infradomain.WorkerName(workerName)] = wq
 	return nil
 }
@@ -111,8 +111,8 @@ func (a AlphaBeeUsecase) RemoveWorker(workerName string) error {
 
 	// TODO: This method is very inefficient, try to find another way to
 	// store worker - task mappings
-	for _, workers := range a.repo.TaskWorkersMapping {
-		delete(workers, infradomain.WorkerName(workerName))
+	for task, _ := range a.repo.TaskWorkersMapping {
+		delete(a.repo.TaskWorkersMapping[task], infradomain.WorkerName(workerName))
 	}
 
 	delete(a.repo.WorkerQueues, infradomain.WorkerName(workerName))

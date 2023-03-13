@@ -15,6 +15,7 @@ import (
 func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 	assert := assert.New(t)
 	repo := infra.NewRepository()
+	repo.JobQueue = make(chan infradomain.Job, 1)
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	job := infradomain.Job{
@@ -31,9 +32,11 @@ func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 func TestAlphaBeeUsecase_PullJob(t *testing.T) {
 	assert := assert.New(t)
 	repo := infra.NewRepository()
+	repo.JobQueue = make(chan infradomain.Job, 1)
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	workerName := "worker1"
+	repo.WorkerQueues[infradomain.WorkerName(workerName)] = make(infradomain.WorkerQueue, 1)
 	repo.WorkerQueues[infradomain.WorkerName(workerName)] <- infradomain.Job{}
 
 	_, err := usecase.PullJob(workerName)
@@ -49,17 +52,21 @@ func TestAlphaBeeUsecase_AddTask(t *testing.T) {
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
+	err := usecase.AddTask("", "invalid-algorithm", 1)
+	assert.NotNil(err)
+
 	taskName := "task1"
 	algorithm := "PRIORITY_SMALL_FIRST"
 	queueLength := 3
 
-	err := usecase.AddTask(taskName, algorithm, queueLength)
+	err = usecase.AddTask(taskName, algorithm, queueLength)
 	assert.Nil(err)
 	assert.Equal(1, len(repo.TaskQueues))
 
-	queues, ok := repo.TaskQueues[infradomain.TaskName(taskName)]
+	_, ok := repo.TaskQueues[infradomain.TaskName(taskName)]
 	assert.True(ok)
-	assert.Equal(queueLength, queues.Len())
+	// priority queue is not fixed length
+	//assert.Equal(queueLength, queues.Len())
 
 	_, ok = repo.Brokers[infradomain.TaskName(taskName)]
 	assert.True(ok)
@@ -101,6 +108,9 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 
 	workerName := "worker1"
 	tasks := []string{"task1", "task2", "task3"}
+	for _, task := range tasks {
+		repo.TaskQueues[infradomain.TaskName(task)] = taskqueue.NewTaskQueue(infradomain.PrioritySmallFirst, 3)
+	}
 	queueLength := 3
 
 	err := usecase.AddWorker(workerName, tasks, queueLength)
@@ -118,7 +128,7 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 
 	workerQueue, ok := repo.WorkerQueues[infradomain.WorkerName(workerName)]
 	assert.True(ok)
-	assert.Equal(queueLength, len(workerQueue))
+	assert.Equal(queueLength, cap(workerQueue))
 
 	// TODO: check worker queue will be initialized to fill jobs
 
@@ -150,7 +160,10 @@ func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
 	assert.Equal(0, len(repo.WorkerQueues))
 
 	for _, task := range tasks {
-		_, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		workers, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		assert.True(ok)
+
+		_, ok = workers[infradomain.WorkerName(workerName)]
 		assert.False(ok)
 	}
 }

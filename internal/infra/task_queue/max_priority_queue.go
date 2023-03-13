@@ -11,7 +11,7 @@ func NewMaxPriorityQueue() infradomain.TaskQueue {
 	return &q
 }
 
-func (q MaxPriorityQueue) Len() int { return len(q) }
+func (q MaxPriorityQueue) Len() int { return len(q) - 1 }
 
 func (q MaxPriorityQueue) less(i, j int) bool { return q[i].Priority < q[j].Priority }
 

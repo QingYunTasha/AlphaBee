@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: must structured, ref: https://ithelp.ithome.com.tw/articles/10204692
+
 func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 	assert := assert.New(t)
 	repo := infra.NewRepository()
@@ -36,6 +38,7 @@ func TestAlphaBeeUsecase_PullJob(t *testing.T) {
 
 	_, err := usecase.PullJob(workerName)
 	assert.Nil(err)
+	assert.Equal(0, len(repo.WorkerQueues[infradomain.WorkerName(workerName)]))
 
 	_, err = usecase.PullJob("invalid-worker")
 	assert.NotNil(err)
@@ -52,7 +55,6 @@ func TestAlphaBeeUsecase_AddTask(t *testing.T) {
 
 	err := usecase.AddTask(taskName, algorithm, queueLength)
 	assert.Nil(err)
-
 	assert.Equal(1, len(repo.TaskQueues))
 
 	queues, ok := repo.TaskQueues[infradomain.TaskName(taskName)]
@@ -84,6 +86,8 @@ func TestAlphaBeeUsecase_RemoveTask(t *testing.T) {
 
 	err := usecase.RemoveTask(taskName)
 	assert.Nil(err)
+	assert.Equal(0, len(repo.TaskQueues))
+	assert.Equal(0, len(repo.Brokers))
 
 	InValidTaskName := "invalid_task1"
 	err = usecase.RemoveTask(InValidTaskName)
@@ -101,7 +105,6 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 
 	err := usecase.AddWorker(workerName, tasks, queueLength)
 	assert.Nil(err)
-
 	assert.Equal(1, len(repo.WorkerTasksMapping))
 
 	tasksMap, ok := repo.WorkerTasksMapping[infradomain.WorkerName(workerName)]
@@ -144,15 +147,10 @@ func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
 
 	err = usecase.RemoveWorker(workerName)
 	assert.Nil(err)
-
 	assert.Equal(0, len(repo.WorkerQueues))
 
 	for _, task := range tasks {
-		if _, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]; ok {
-
-			// not implemented
-			t.Errorf("")
-
-		}
+		_, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		assert.False(ok)
 	}
 }

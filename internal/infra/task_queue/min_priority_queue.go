@@ -1,13 +1,13 @@
 package taskqueue
 
 import (
-	infradomain "AlphaBee/domain/infra"
+	domain "AlphaBee/domain"
 )
 
-type MinPriorityQueue []infradomain.Job
+type MinPriorityQueue []domain.Job
 
-func NewMinPriorityQueue() infradomain.TaskQueue {
-	q := append(MinPriorityQueue{}, infradomain.Job{})
+func NewMinPriorityQueue() domain.TaskQueue {
+	q := append(MinPriorityQueue{}, domain.Job{})
 	return &q
 }
 
@@ -17,12 +17,12 @@ func (q MinPriorityQueue) less(i, j int) bool { return q[i].Priority > q[j].Prio
 
 func (q MinPriorityQueue) swap(i, j int) { q[i], q[j] = q[j], q[i] }
 
-func (q *MinPriorityQueue) Push(job infradomain.Job) {
+func (q *MinPriorityQueue) Push(job domain.Job) {
 	*q = append(*q, job)
 	q.up(len(*q) - 1)
 }
 
-func (q *MinPriorityQueue) Pop() infradomain.Job {
+func (q *MinPriorityQueue) Pop() domain.Job {
 	n := len(*q) - 1
 	res := (*q)[1]
 	(*q)[1] = (*q)[n]

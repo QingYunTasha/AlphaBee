@@ -1,7 +1,7 @@
 package usecase_test
 
 import (
-	infradomain "AlphaBee/domain/infra"
+	domain "AlphaBee/domain"
 	infra "AlphaBee/internal/infra"
 	taskqueue "AlphaBee/internal/infra/task_queue"
 	usecase "AlphaBee/internal/usecase"
@@ -15,10 +15,10 @@ import (
 func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 	assert := assert.New(t)
 	repo := infra.NewRepository()
-	repo.JobQueue = make(chan infradomain.Job, 1)
+	repo.JobQueue = make(chan domain.Job, 1)
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
-	job := infradomain.Job{
+	job := domain.Job{
 		TaskName: "job1",
 		Priority: 1,
 	}
@@ -32,16 +32,16 @@ func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 func TestAlphaBeeUsecase_PullJob(t *testing.T) {
 	assert := assert.New(t)
 	repo := infra.NewRepository()
-	repo.JobQueue = make(chan infradomain.Job, 1)
+	repo.JobQueue = make(chan domain.Job, 1)
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	workerName := "worker1"
-	repo.WorkerQueues[infradomain.WorkerName(workerName)] = make(infradomain.WorkerQueue, 1)
-	repo.WorkerQueues[infradomain.WorkerName(workerName)] <- infradomain.Job{}
+	repo.WorkerQueues[domain.WorkerName(workerName)] = make(domain.WorkerQueue, 1)
+	repo.WorkerQueues[domain.WorkerName(workerName)] <- domain.Job{}
 
 	_, err := usecase.PullJob(workerName)
 	assert.Nil(err)
-	assert.Equal(0, len(repo.WorkerQueues[infradomain.WorkerName(workerName)]))
+	assert.Equal(0, len(repo.WorkerQueues[domain.WorkerName(workerName)]))
 
 	_, err = usecase.PullJob("invalid-worker")
 	assert.NotNil(err)
@@ -63,12 +63,12 @@ func TestAlphaBeeUsecase_AddTask(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(1, len(repo.TaskQueues))
 
-	_, ok := repo.TaskQueues[infradomain.TaskName(taskName)]
+	_, ok := repo.TaskQueues[domain.TaskName(taskName)]
 	assert.True(ok)
 	// priority queue is not fixed length
 	//assert.Equal(queueLength, queues.Len())
 
-	_, ok = repo.Brokers[infradomain.TaskName(taskName)]
+	_, ok = repo.Brokers[domain.TaskName(taskName)]
 	assert.True(ok)
 
 	err = usecase.AddTask(taskName, algorithm, queueLength)
@@ -85,11 +85,11 @@ func TestAlphaBeeUsecase_RemoveTask(t *testing.T) {
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	taskName := "task1"
-	asyncTaskQueue := taskqueue.NewTaskQueue(infradomain.PrioritySmallFirst, 3)
-	repo.TaskQueues[infradomain.TaskName(taskName)] = asyncTaskQueue
+	asyncTaskQueue := taskqueue.NewTaskQueue(domain.PrioritySmallFirst, 3)
+	repo.TaskQueues[domain.TaskName(taskName)] = asyncTaskQueue
 
 	broker := infra.NewBroker(asyncTaskQueue, repo.WorkerQueues)
-	repo.Brokers[infradomain.TaskName(taskName)] = broker
+	repo.Brokers[domain.TaskName(taskName)] = broker
 
 	err := usecase.RemoveTask(taskName)
 	assert.Nil(err)
@@ -109,7 +109,7 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 	workerName := "worker1"
 	tasks := []string{"task1", "task2", "task3"}
 	for _, task := range tasks {
-		repo.TaskQueues[infradomain.TaskName(task)] = taskqueue.NewTaskQueue(infradomain.PrioritySmallFirst, 3)
+		repo.TaskQueues[domain.TaskName(task)] = taskqueue.NewTaskQueue(domain.PrioritySmallFirst, 3)
 	}
 	queueLength := 3
 
@@ -117,16 +117,16 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(1, len(repo.WorkerTasksMapping))
 
-	tasksMap, ok := repo.WorkerTasksMapping[infradomain.WorkerName(workerName)]
+	tasksMap, ok := repo.WorkerTasksMapping[domain.WorkerName(workerName)]
 	assert.True(ok)
 	assert.Equal(queueLength, len(tasksMap))
 
 	for _, task := range tasks {
-		_, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		_, ok := repo.TaskWorkersMapping[domain.TaskName(task)]
 		assert.True(ok)
 	}
 
-	workerQueue, ok := repo.WorkerQueues[infradomain.WorkerName(workerName)]
+	workerQueue, ok := repo.WorkerQueues[domain.WorkerName(workerName)]
 	assert.True(ok)
 	assert.Equal(queueLength, cap(workerQueue))
 
@@ -146,10 +146,10 @@ func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
 	queueLength := 3
 
 	wq := infra.NewWorkerQueue(queueLength)
-	repo.WorkerQueues[infradomain.WorkerName(workerName)] = wq
+	repo.WorkerQueues[domain.WorkerName(workerName)] = wq
 
 	for _, task := range tasks {
-		repo.TaskWorkersMapping[infradomain.TaskName(task)] = make(map[infradomain.WorkerName]bool)
+		repo.TaskWorkersMapping[domain.TaskName(task)] = make(map[domain.WorkerName]bool)
 	}
 
 	err := usecase.RemoveWorker("invalid worker")
@@ -160,10 +160,10 @@ func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
 	assert.Equal(0, len(repo.WorkerQueues))
 
 	for _, task := range tasks {
-		workers, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		workers, ok := repo.TaskWorkersMapping[domain.TaskName(task)]
 		assert.True(ok)
 
-		_, ok = workers[infradomain.WorkerName(workerName)]
+		_, ok = workers[domain.WorkerName(workerName)]
 		assert.False(ok)
 	}
 }

@@ -1,8 +1,7 @@
 package restful
 
 import (
-	infradomain "AlphaBee/domain/infra"
-	usecasedomain "AlphaBee/domain/usecase"
+	domain "AlphaBee/domain"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,10 +9,10 @@ import (
 )
 
 type AlphaBeeHandler struct {
-	AlphaBeeUsecase usecasedomain.AlphaBeeUsecase
+	AlphaBeeUsecase domain.AlphaBeeUsecase
 }
 
-func NewAlphaBeeHandler(server *gin.Engine, usecase usecasedomain.AlphaBeeUsecase) {
+func NewAlphaBeeHandler(server *gin.Engine, usecase domain.AlphaBeeUsecase) {
 	handler := &AlphaBeeHandler{
 		AlphaBeeUsecase: usecase,
 	}
@@ -27,7 +26,7 @@ func NewAlphaBeeHandler(server *gin.Engine, usecase usecasedomain.AlphaBeeUsecas
 }
 
 func (h AlphaBeeHandler) PushJob(c *gin.Context) {
-	var job infradomain.Job
+	var job domain.Job
 	if err := c.ShouldBindJSON(&job); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

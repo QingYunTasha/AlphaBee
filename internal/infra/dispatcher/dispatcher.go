@@ -1,15 +1,15 @@
 package infra
 
 import (
-	infradomain "AlphaBee/domain/infra"
+	domain "AlphaBee/domain"
 )
 
 type Dispatcher struct {
-	JobQueue   infradomain.JobQueue
-	TaskQueues map[infradomain.TaskName]infradomain.AsyncTaskQueue
+	JobQueue   domain.JobQueue
+	TaskQueues map[domain.TaskName]domain.AsyncTaskQueue
 }
 
-func NewDispatcher(jobQueue infradomain.JobQueue, taskQueues map[infradomain.TaskName]infradomain.AsyncTaskQueue) infradomain.Dispatcher {
+func NewDispatcher(jobQueue domain.JobQueue, taskQueues map[domain.TaskName]domain.AsyncTaskQueue) domain.Dispatcher {
 	return &Dispatcher{
 		JobQueue:   jobQueue,
 		TaskQueues: taskQueues,
@@ -18,7 +18,7 @@ func NewDispatcher(jobQueue infradomain.JobQueue, taskQueues map[infradomain.Tas
 
 func (d Dispatcher) Run() {
 	go func() {
-		var job infradomain.Job
+		var job domain.Job
 		for {
 			job = <-d.JobQueue
 

@@ -2,6 +2,35 @@ package domain
 
 import "sync"
 
+type Broker interface {
+	PushJob(job Job, workerName string)
+}
+
+type Dispatcher interface {
+	Run()
+}
+
+type JobQueue chan Job
+
+type Job struct {
+	TaskName string
+	Priority uint8
+}
+
+type PriorityJob struct {
+	TaskName string
+	Priority uint8
+}
+
+type Repository struct {
+	JobQueue           chan Job
+	TaskQueues         map[TaskName]AsyncTaskQueue
+	Brokers            map[TaskName]Broker
+	TaskWorkersMapping map[TaskName]map[WorkerName]bool
+	WorkerTasksMapping map[WorkerName]map[TaskName]bool
+	WorkerQueues       map[WorkerName]WorkerQueue
+}
+
 type Algorithm string
 
 var (
@@ -34,3 +63,7 @@ type AsyncTaskQueue interface {
 	Pop() (job Job)
 	Len() int
 }
+
+type WorkerName string
+
+type WorkerQueue chan Job

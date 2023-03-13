@@ -1,21 +1,21 @@
 package taskqueue
 
 import (
-	infradomain "AlphaBee/domain/infra"
+	domain "AlphaBee/domain"
 	"sync"
 )
 
 type TaskQueue struct {
 	sync.Mutex
-	Jobs infradomain.TaskQueue
+	Jobs domain.TaskQueue
 }
 
-func NewTaskQueue(algorithm infradomain.Algorithm, length int) infradomain.AsyncTaskQueue {
-	var jobs infradomain.TaskQueue
+func NewTaskQueue(algorithm domain.Algorithm, length int) domain.AsyncTaskQueue {
+	var jobs domain.TaskQueue
 	switch algorithm {
-	case infradomain.PrioritySmallFirst:
+	case domain.PrioritySmallFirst:
 		jobs = NewMinPriorityQueue()
-	case infradomain.PriorityLargeFirst:
+	case domain.PriorityLargeFirst:
 		jobs = NewMaxPriorityQueue()
 	}
 
@@ -25,13 +25,13 @@ func NewTaskQueue(algorithm infradomain.Algorithm, length int) infradomain.Async
 	}
 }
 
-func (q *TaskQueue) Push(job infradomain.Job) {
+func (q *TaskQueue) Push(job domain.Job) {
 	q.Lock()
 	defer q.Unlock()
 	q.Jobs.Push(job)
 }
 
-func (q *TaskQueue) Pop() (job infradomain.Job) {
+func (q *TaskQueue) Pop() (job domain.Job) {
 	q.Lock()
 	defer q.Unlock()
 	if q.Jobs.Len() == 0 {

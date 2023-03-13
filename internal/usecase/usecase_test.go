@@ -6,9 +6,12 @@ import (
 	taskqueue "AlphaBee/internal/infra/task_queue"
 	usecase "AlphaBee/internal/usecase"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAlphaBeeUsecase_PushJob(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
@@ -17,67 +20,58 @@ func TestAlphaBeeUsecase_PushJob(t *testing.T) {
 		Priority: 1,
 	}
 
-	if err := usecase.PushJob(job); err != nil {
-		t.Errorf("Error pushing job: %s", err.Error())
-	}
+	err := usecase.PushJob(job)
+	assert.Nil(err)
 
-	if len(repo.JobQueue) != 1 {
-		t.Errorf("Expected 1 job in job queue, but found %d", len(repo.JobQueue))
-	}
+	assert.Equal(1, len(repo.JobQueue))
 }
 
 func TestAlphaBeeUsecase_PullJob(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	workerName := "worker1"
 	repo.WorkerQueues[infradomain.WorkerName(workerName)] <- infradomain.Job{}
 
-	if _, err := usecase.PullJob(workerName); err != nil {
-		t.Errorf("Error pulling job: %s", err.Error())
-	}
+	_, err := usecase.PullJob(workerName)
+	assert.Nil(err)
 
-	if _, err := usecase.PullJob("invalid-worker"); err != nil {
-		t.Errorf("expected error, but got nil")
-	}
+	_, err = usecase.PullJob("invalid-worker")
+	assert.NotNil(err)
 }
 
 func TestAlphaBeeUsecase_AddTask(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	taskName := "task1"
 	algorithm := "PRIORITY_SMALL_FIRST"
 	queueLength := 3
-	if err := usecase.AddTask(taskName, algorithm, queueLength); err != nil {
-		t.Errorf("Error add task: %s", err.Error())
-	}
 
-	if len(repo.TaskQueues) != 1 {
-		t.Errorf("taskQueue length should be 1")
-	}
+	err := usecase.AddTask(taskName, algorithm, queueLength)
+	assert.Nil(err)
+
+	assert.Equal(1, len(repo.TaskQueues))
+
 	queues, ok := repo.TaskQueues[infradomain.TaskName(taskName)]
-	if !ok {
-		t.Errorf("%s queue not found", taskName)
-	}
-	if queues.Len() != queueLength {
-		t.Errorf("len of queues should be %d", queueLength)
-	}
-	if _, ok := repo.Brokers[infradomain.TaskName(taskName)]; !ok {
-		t.Errorf("%s broker not found", taskName)
-	}
+	assert.True(ok)
+	assert.Equal(queueLength, queues.Len())
 
-	if err := usecase.AddTask(taskName, algorithm, queueLength); err == nil {
-		t.Errorf("expected error")
-	}
+	_, ok = repo.Brokers[infradomain.TaskName(taskName)]
+	assert.True(ok)
+
+	err = usecase.AddTask(taskName, algorithm, queueLength)
+	assert.NotNil(err)
 
 	unValidAlgorithm := "unvalid"
-	if err := usecase.AddTask(taskName, unValidAlgorithm, 1); err == nil {
-		t.Errorf("expected error")
-	}
+	err = usecase.AddTask(taskName, unValidAlgorithm, 1)
+	assert.NotNil(err)
 }
 
 func TestAlphaBeeUsecase_RemoveTask(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
@@ -88,17 +82,16 @@ func TestAlphaBeeUsecase_RemoveTask(t *testing.T) {
 	broker := infra.NewBroker(asyncTaskQueue, repo.WorkerQueues)
 	repo.Brokers[infradomain.TaskName(taskName)] = broker
 
-	if err := usecase.RemoveTask(taskName); err != nil {
-		t.Errorf("remove task error")
-	}
+	err := usecase.RemoveTask(taskName)
+	assert.Nil(err)
 
 	InValidTaskName := "invalid_task1"
-	if err := usecase.RemoveTask(InValidTaskName); err == nil {
-		t.Errorf("expect error")
-	}
+	err = usecase.RemoveTask(InValidTaskName)
+	assert.NotNil(err)
 }
 
 func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
@@ -106,45 +99,32 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 	tasks := []string{"task1", "task2", "task3"}
 	queueLength := 3
 
-	if err := usecase.AddWorker(workerName, tasks, queueLength); err != nil {
-		t.Errorf("Add worker error: %v", err)
-	}
+	err := usecase.AddWorker(workerName, tasks, queueLength)
+	assert.Nil(err)
 
-	if len(repo.WorkerTasksMapping) != 1 {
-		t.Errorf("lenhth of workerTasksMapping error")
-	}
+	assert.Equal(1, len(repo.WorkerTasksMapping))
 
 	tasksMap, ok := repo.WorkerTasksMapping[infradomain.WorkerName(workerName)]
-	if !ok {
-		t.Errorf("WorkerTasksMapping error, not found %s", workerName)
-	}
-
-	if len(tasksMap) != queueLength {
-		t.Errorf("tasks length error")
-	}
+	assert.True(ok)
+	assert.Equal(queueLength, len(tasksMap))
 
 	for _, task := range tasks {
-		if _, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]; !ok {
-			t.Errorf("%s not found in workerTasksMapping", task)
-		}
+		_, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]
+		assert.True(ok)
 	}
 
 	workerQueue, ok := repo.WorkerQueues[infradomain.WorkerName(workerName)]
-	if !ok {
-		t.Errorf("%s workerQueue not found")
-	}
-	if len(workerQueue) != queueLength {
-		t.Errorf("workerQueue length error")
-	}
+	assert.True(ok)
+	assert.Equal(queueLength, len(workerQueue))
 
 	// TODO: check worker queue will be initialized to fill jobs
 
-	if err := usecase.AddWorker(workerName, tasks, queueLength); err == nil {
-		t.Errorf("expect error")
-	}
+	err = usecase.AddWorker(workerName, tasks, queueLength)
+	assert.NotNil(err)
 }
 
 func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
+	assert := assert.New(t)
 	repo := infra.NewRepository()
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
@@ -159,17 +139,13 @@ func TestAlphaBeeUsecase_RemoveWorker(t *testing.T) {
 		repo.TaskWorkersMapping[infradomain.TaskName(task)] = make(map[infradomain.WorkerName]bool)
 	}
 
-	if err := usecase.RemoveWorker("invalid worker"); err == nil {
-		t.Errorf("expect error")
-	}
+	err := usecase.RemoveWorker("invalid worker")
+	assert.NotNil(err)
 
-	if err := usecase.RemoveWorker(workerName); err != nil {
-		t.Errorf("removeWorker error")
-	}
+	err = usecase.RemoveWorker(workerName)
+	assert.Nil(err)
 
-	if len(repo.WorkerQueues) != 0 {
-		t.Errorf("workerQueue must be zero")
-	}
+	assert.Equal(0, len(repo.WorkerQueues))
 
 	for _, task := range tasks {
 		if _, ok := repo.TaskWorkersMapping[infradomain.TaskName(task)]; ok {

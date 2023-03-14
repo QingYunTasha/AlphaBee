@@ -9,6 +9,6 @@ type Broker struct {
 	WorkerQueues map[domain.WorkerName]domain.WorkerQueue
 }
 
-func (b Broker) PushJob(job domain.Job, workerName string) {
+func (b Broker) PushJob(workerName string) {
 	b.WorkerQueues[domain.WorkerName(workerName)] <- b.TaskQueue.Pop()
 }

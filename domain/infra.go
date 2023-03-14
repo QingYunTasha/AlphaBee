@@ -3,7 +3,7 @@ package domain
 import "sync"
 
 type Broker interface {
-	PushJob(job Job, workerName string)
+	PushJob(workerName string)
 }
 
 type Dispatcher interface {

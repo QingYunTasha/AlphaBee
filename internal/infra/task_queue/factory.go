@@ -10,21 +10,6 @@ type TaskQueue struct {
 	Jobs domain.TaskQueue
 }
 
-func NewTaskQueue(algorithm domain.Algorithm, length int) domain.AsyncTaskQueue {
-	var jobs domain.TaskQueue
-	switch algorithm {
-	case domain.PrioritySmallFirst:
-		jobs = NewMinPriorityQueue()
-	case domain.PriorityLargeFirst:
-		jobs = NewMaxPriorityQueue()
-	}
-
-	return &TaskQueue{
-		Mutex: sync.Mutex{},
-		Jobs:  jobs,
-	}
-}
-
 func (q *TaskQueue) Push(job domain.Job) {
 	q.Lock()
 	defer q.Unlock()

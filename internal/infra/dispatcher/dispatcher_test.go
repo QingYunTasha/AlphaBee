@@ -1,4 +1,4 @@
-package infra_test
+package dispatcher_test
 
 import (
 	domain "AlphaBee/domain"

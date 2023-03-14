@@ -1,9 +1,8 @@
 package usecase
 
 import (
-	domain "AlphaBee/domain"
+	"AlphaBee/domain"
 	"AlphaBee/internal/infra"
-	taskqueue "AlphaBee/internal/infra/task_queue"
 	"fmt"
 )
 
@@ -52,7 +51,7 @@ func (a AlphaBeeUsecase) AddTask(taskName string, algorithm string, taskQueueLen
 		return fmt.Errorf("algorithm %s not supported", algorithm)
 	}
 
-	tq := taskqueue.NewTaskQueue(domain.Algorithm(algorithm), taskQueueLength)
+	tq := infra.NewTaskQueue(domain.Algorithm(algorithm), taskQueueLength)
 	a.repo.TaskQueues[domain.TaskName(taskName)] = tq
 	a.repo.Brokers[domain.TaskName(taskName)] = infra.NewBroker(tq, a.repo.WorkerQueues)
 

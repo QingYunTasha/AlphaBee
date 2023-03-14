@@ -1,4 +1,4 @@
-package infra
+package broker
 
 import (
 	domain "AlphaBee/domain"
@@ -7,13 +7,6 @@ import (
 type Broker struct {
 	TaskQueue    domain.AsyncTaskQueue
 	WorkerQueues map[domain.WorkerName]domain.WorkerQueue
-}
-
-func NewBroker(taskQueue domain.AsyncTaskQueue, workerQueues map[domain.WorkerName]domain.WorkerQueue) domain.Broker {
-	return &Broker{
-		TaskQueue:    taskQueue,
-		WorkerQueues: workerQueues,
-	}
 }
 
 func (b Broker) PushJob(job domain.Job, workerName string) {

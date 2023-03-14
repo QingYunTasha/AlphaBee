@@ -1,4 +1,4 @@
-package infra
+package dispatcher
 
 import (
 	domain "AlphaBee/domain"

@@ -3,7 +3,6 @@ package usecase_test
 import (
 	domain "AlphaBee/domain"
 	infra "AlphaBee/internal/infra"
-	taskqueue "AlphaBee/internal/infra/task_queue"
 	usecase "AlphaBee/internal/usecase"
 	"testing"
 
@@ -85,7 +84,7 @@ func TestAlphaBeeUsecase_RemoveTask(t *testing.T) {
 	usecase := usecase.NewAlphaBeeUsecase(repo)
 
 	taskName := "task1"
-	asyncTaskQueue := taskqueue.NewTaskQueue(domain.PrioritySmallFirst, 3)
+	asyncTaskQueue := infra.NewTaskQueue(domain.PrioritySmallFirst, 3)
 	repo.TaskQueues[domain.TaskName(taskName)] = asyncTaskQueue
 
 	broker := infra.NewBroker(asyncTaskQueue, repo.WorkerQueues)
@@ -109,7 +108,7 @@ func TestAlphaBeeUsecase_AddWorkedr(t *testing.T) {
 	workerName := "worker1"
 	tasks := []string{"task1", "task2", "task3"}
 	for _, task := range tasks {
-		repo.TaskQueues[domain.TaskName(task)] = taskqueue.NewTaskQueue(domain.PrioritySmallFirst, 3)
+		repo.TaskQueues[domain.TaskName(task)] = infra.NewTaskQueue(domain.PrioritySmallFirst, 3)
 	}
 	queueLength := 3
 
